@@ -77,29 +77,33 @@ class CodeGenerator:
         elif isinstance(node, BinaryOp):
             if node.op in ('&&', '||'):
                 # For logical operations, we need to evaluate left operand first
+                false_label = self.new_label()
+                true_label = self.new_label()
+                end_label = self.new_label()
+                
                 self.generate(node.left)
                 self.emit("    test rax, rax")
                 if node.op == '&&':
-                    self.emit("    jz .false")
+                    self.emit(f"    jz {false_label}")
                 else:  # ||
-                    self.emit("    jnz .true")
+                    self.emit(f"    jnz {true_label}")
                 
                 self.generate(node.right)
                 self.emit("    test rax, rax")
                 if node.op == '&&':
-                    self.emit("    jz .false")
+                    self.emit(f"    jz {false_label}")
                     self.emit("    mov rax, 1")
-                    self.emit("    jmp .end")
-                    self.emit(".false:")
+                    self.emit(f"    jmp {end_label}")
+                    self.emit(f"{false_label}:")
                     self.emit("    mov rax, 0")
-                    self.emit(".end:")
+                    self.emit(f"{end_label}:")
                 else:  # ||
-                    self.emit("    jnz .true")
+                    self.emit(f"    jnz {true_label}")
                     self.emit("    mov rax, 0")
-                    self.emit("    jmp .end")
-                    self.emit(".true:")
+                    self.emit(f"    jmp {end_label}")
+                    self.emit(f"{true_label}:")
                     self.emit("    mov rax, 1")
-                    self.emit(".end:")
+                    self.emit(f"{end_label}:")
             else:
                 # For other operations, evaluate right operand first
                 self.generate(node.right)
