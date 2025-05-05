@@ -103,11 +103,49 @@ class CodeGenerator:
     def get_code(self):
         # Add print_int function
         self.emit("print_int:")
-        self.emit("    mov rsi, rdi")
-        self.emit("    mov rdi, 1")  # stdout
-        self.emit("    mov rdx, 1")  # length
-        self.emit("    mov rax, 1")  # sys_write
+        self.emit("    push rbp")
+        self.emit("    mov rbp, rsp")
+        self.emit("    sub rsp, 32")  # Reserve space for local variables
+        
+        # Convert number to ASCII
+        self.emit("    mov rax, rdi")  # Get the number to print
+        self.emit("    mov rcx, 10")   # Base 10
+        self.emit("    mov rdi, rbp")
+        self.emit("    sub rdi, 1")    # Point to end of buffer
+        self.emit("    mov byte [rdi], 0")  # Null terminator
+        
+        self.emit("convert_loop:")
+        self.emit("    xor rdx, rdx")  # Clear rdx for division
+        self.emit("    div rcx")       # Divide by 10
+        self.emit("    add dl, '0'")   # Convert to ASCII
+        self.emit("    dec rdi")       # Move buffer pointer
+        self.emit("    mov [rdi], dl") # Store digit
+        self.emit("    test rax, rax") # Check if quotient is zero
+        self.emit("    jnz convert_loop")
+        
+        # Calculate string length
+        self.emit("    mov rsi, rdi")  # Start of string
+        self.emit("    mov rdx, rbp")
+        self.emit("    sub rdx, rdi")  # Length = end - start
+        
+        # Write to stdout
+        self.emit("    mov rax, 1")    # sys_write
+        self.emit("    mov rdi, 1")    # stdout
         self.emit("    syscall")
+        
+        # Add newline
+        self.emit("    mov rax, 1")    # sys_write
+        self.emit("    mov rdi, 1")    # stdout
+        self.emit("    mov rsi, newline")
+        self.emit("    mov rdx, 1")    # length
+        self.emit("    syscall")
+        
+        self.emit("    add rsp, 32")   # Restore stack
+        self.emit("    pop rbp")
         self.emit("    ret")
+        
+        # Add data section for newline
+        self.emit("section .data")
+        self.emit("newline: db 10")    # ASCII newline
 
         return "\n".join(self.output) 
