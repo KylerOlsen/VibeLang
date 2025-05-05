@@ -75,64 +75,71 @@ class CodeGenerator:
             self.emit(f"{end_label}:")
 
         elif isinstance(node, BinaryOp):
-            self.generate(node.right)
-            self.emit("    push rax")
-            self.generate(node.left)
-            self.emit("    pop rbx")
+            if node.op in ('&&', '||'):
+                # For logical operations, we need to evaluate left operand first
+                self.generate(node.left)
+                self.emit("    test rax, rax")
+                if node.op == '&&':
+                    self.emit("    jz .false")
+                else:  # ||
+                    self.emit("    jnz .true")
+                
+                self.generate(node.right)
+                self.emit("    test rax, rax")
+                if node.op == '&&':
+                    self.emit("    jz .false")
+                    self.emit("    mov rax, 1")
+                    self.emit("    jmp .end")
+                    self.emit(".false:")
+                    self.emit("    mov rax, 0")
+                    self.emit(".end:")
+                else:  # ||
+                    self.emit("    jnz .true")
+                    self.emit("    mov rax, 0")
+                    self.emit("    jmp .end")
+                    self.emit(".true:")
+                    self.emit("    mov rax, 1")
+                    self.emit(".end:")
+            else:
+                # For other operations, evaluate right operand first
+                self.generate(node.right)
+                self.emit("    push rax")
+                self.generate(node.left)
+                self.emit("    pop rbx")
 
-            if node.op == '+':
-                self.emit("    add rax, rbx")
-            elif node.op == '-':
-                self.emit("    sub rax, rbx")
-            elif node.op == '*':
-                self.emit("    imul rax, rbx")
-            elif node.op == '/':
-                self.emit("    cqo")
-                self.emit("    idiv rbx")
-            elif node.op == '==':
-                self.emit("    cmp rax, rbx")
-                self.emit("    sete al")
-                self.emit("    movzx rax, al")
-            elif node.op == '!=':
-                self.emit("    cmp rax, rbx")
-                self.emit("    setne al")
-                self.emit("    movzx rax, al")
-            elif node.op == '<':
-                self.emit("    cmp rax, rbx")
-                self.emit("    setl al")
-                self.emit("    movzx rax, al")
-            elif node.op == '>':
-                self.emit("    cmp rax, rbx")
-                self.emit("    setg al")
-                self.emit("    movzx rax, al")
-            elif node.op == '<=':
-                self.emit("    cmp rax, rbx")
-                self.emit("    setle al")
-                self.emit("    movzx rax, al")
-            elif node.op == '>=':
-                self.emit("    cmp rax, rbx")
-                self.emit("    setge al")
-                self.emit("    movzx rax, al")
-            elif node.op == '&&':
-                self.emit("    test rax, rax")
-                self.emit("    jz .false")
-                self.emit("    test rbx, rbx")
-                self.emit("    jz .false")
-                self.emit("    mov rax, 1")
-                self.emit("    jmp .end")
-                self.emit(".false:")
-                self.emit("    mov rax, 0")
-                self.emit(".end:")
-            elif node.op == '||':
-                self.emit("    test rax, rax")
-                self.emit("    jnz .true")
-                self.emit("    test rbx, rbx")
-                self.emit("    jnz .true")
-                self.emit("    mov rax, 0")
-                self.emit("    jmp .end")
-                self.emit(".true:")
-                self.emit("    mov rax, 1")
-                self.emit(".end:")
+                if node.op == '+':
+                    self.emit("    add rax, rbx")
+                elif node.op == '-':
+                    self.emit("    sub rax, rbx")
+                elif node.op == '*':
+                    self.emit("    imul rax, rbx")
+                elif node.op == '/':
+                    self.emit("    cqo")
+                    self.emit("    idiv rbx")
+                elif node.op == '==':
+                    self.emit("    cmp rax, rbx")
+                    self.emit("    sete al")
+                    self.emit("    movzx rax, al")
+                elif node.op == '!=':
+                    self.emit("    cmp rax, rbx")
+                    self.emit("    setne al")
+                    self.emit("    movzx rax, al")
+                elif node.op == '<':
+                    self.emit("    cmp rax, rbx")
+                    self.emit("    setl al")
+                    self.emit("    movzx rax, al")
+                elif node.op == '>':
+                    self.emit("    cmp rax, rbx")
+                    self.emit("    setg al")
+                    self.emit("    movzx rax, al")
+                elif node.op == '<=':
+                    self.emit("    cmp rax, rbx")
+                    self.emit("    setle al")
+                    self.emit("    movzx rax, al")
+                elif node.op == '>=':
+                    self.emit("    cmp rax, rbx")
+                    self.emit("    setge al")
+                    self.emit("    movzx rax, al")
 
         elif isinstance(node, Number):
             self.emit(f"    mov rax, {node.value}")
