@@ -17,13 +17,7 @@ class CodeGenerator:
     def generate(self, node):
         if isinstance(node, Program):
             self.emit("section .text")
-            self.emit("global _start")
-            self.emit("")
-            self.emit("_start:")
-            self.emit("    call main")
-            self.emit("    mov rax, 60")  # sys_exit
-            self.emit("    mov rdi, 0")   # exit code
-            self.emit("    syscall")
+            self.emit("global main")
             self.emit("")
 
             for func in node.functions:
@@ -34,6 +28,7 @@ class CodeGenerator:
             self.emit("    push rbp")
             self.emit("    mov rbp, rsp")
             self.generate(node.body)
+            self.emit("    mov rax, 0")  # Return 0 from main
             self.emit("    pop rbp")
             self.emit("    ret")
             self.emit("")
