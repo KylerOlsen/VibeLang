@@ -1,3 +1,5 @@
+from parser import Program, Function, Block, VariableDeclaration, Assignment, Print, BinaryOp, Number, Identifier
+
 class CodeGenerator:
     def __init__(self):
         self.output = []
