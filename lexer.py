@@ -26,6 +26,9 @@ tokens = (
     'GREATER',
     'LESSEQUAL',
     'GREATEREQUAL',
+    'AND',
+    'OR',
+    'NOT',
 )
 
 # Regular expression rules for simple tokens
@@ -45,6 +48,9 @@ t_LESS = r'<'
 t_GREATER = r'>'
 t_LESSEQUAL = r'<='
 t_GREATEREQUAL = r'>='
+t_AND = r'&&'
+t_OR = r'\|\|'
+t_NOT = r'!'
 
 # Keywords
 def t_FN(t):

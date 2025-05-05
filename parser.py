@@ -32,6 +32,12 @@ class Print(Node):
     def __init__(self, value):
         self.value = value
 
+class If(Node):
+    def __init__(self, condition, then_block, else_block=None):
+        self.condition = condition
+        self.then_block = then_block
+        self.else_block = else_block
+
 class BinaryOp(Node):
     def __init__(self, left, op, right):
         self.left = left
@@ -75,6 +81,7 @@ def p_statement(p):
     '''statement : variable_declaration
                  | assignment
                  | print_statement
+                 | if_statement
                  | expression SEMICOLON'''
     p[0] = p[1]
 
@@ -90,6 +97,14 @@ def p_print_statement(p):
     '''print_statement : PRINT LPAREN expression RPAREN SEMICOLON'''
     p[0] = Print(p[3])
 
+def p_if_statement(p):
+    '''if_statement : IF LPAREN expression RPAREN LBRACE statements RBRACE
+                    | IF LPAREN expression RPAREN LBRACE statements RBRACE ELSE LBRACE statements RBRACE'''
+    if len(p) == 8:
+        p[0] = If(p[3], Block(p[6]))
+    else:
+        p[0] = If(p[3], Block(p[6]), Block(p[10]))
+
 def p_expression_binop(p):
     '''expression : expression PLUS expression
                   | expression MINUS expression
@@ -100,8 +115,14 @@ def p_expression_binop(p):
                   | expression LESS expression
                   | expression GREATER expression
                   | expression LESSEQUAL expression
-                  | expression GREATEREQUAL expression'''
+                  | expression GREATEREQUAL expression
+                  | expression AND expression
+                  | expression OR expression'''
     p[0] = BinaryOp(p[1], p[2], p[3])
+
+def p_expression_unop(p):
+    '''expression : NOT expression'''
+    p[0] = BinaryOp(Number(0), '==', p[2])  # Convert !x to 0 == x
 
 def p_expression_group(p):
     '''expression : LPAREN expression RPAREN'''

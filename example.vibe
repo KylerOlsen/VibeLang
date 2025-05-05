@@ -1,6 +1,16 @@
 fn main() {
     let x = 42;
     let y = 10;
-    let z = x + y;
-    print(z);
+    
+    if (x > y) {
+        print(x);
+    } else {
+        print(y);
+    }
+    
+    if (x == 42 && y == 10) {
+        print(1);
+    } else {
+        print(0);
+    }
 } 

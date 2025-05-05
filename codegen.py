@@ -1,4 +1,4 @@
-from parser import Program, Function, Block, VariableDeclaration, Assignment, Print, BinaryOp, Number, Identifier
+from parser import Program, Function, Block, VariableDeclaration, Assignment, Print, BinaryOp, Number, Identifier, If
 
 class CodeGenerator:
     def __init__(self):
@@ -52,6 +52,28 @@ class CodeGenerator:
             self.emit("    mov rdi, rax")
             self.emit("    call print_int")
 
+        elif isinstance(node, If):
+            # Generate condition
+            self.generate(node.condition)
+            self.emit("    test rax, rax")
+            
+            # Create labels
+            else_label = self.new_label()
+            end_label = self.new_label()
+            
+            # Jump to else or end if condition is false
+            self.emit(f"    jz {else_label if node.else_block else end_label}")
+            
+            # Generate then block
+            self.generate(node.then_block)
+            
+            if node.else_block:
+                self.emit(f"    jmp {end_label}")
+                self.emit(f"{else_label}:")
+                self.generate(node.else_block)
+            
+            self.emit(f"{end_label}:")
+
         elif isinstance(node, BinaryOp):
             self.generate(node.right)
             self.emit("    push rax")
@@ -91,6 +113,26 @@ class CodeGenerator:
                 self.emit("    cmp rax, rbx")
                 self.emit("    setge al")
                 self.emit("    movzx rax, al")
+            elif node.op == '&&':
+                self.emit("    test rax, rax")
+                self.emit("    jz .false")
+                self.emit("    test rbx, rbx")
+                self.emit("    jz .false")
+                self.emit("    mov rax, 1")
+                self.emit("    jmp .end")
+                self.emit(".false:")
+                self.emit("    mov rax, 0")
+                self.emit(".end:")
+            elif node.op == '||':
+                self.emit("    test rax, rax")
+                self.emit("    jnz .true")
+                self.emit("    test rbx, rbx")
+                self.emit("    jnz .true")
+                self.emit("    mov rax, 0")
+                self.emit("    jmp .end")
+                self.emit(".true:")
+                self.emit("    mov rax, 1")
+                self.emit(".end:")
 
         elif isinstance(node, Number):
             self.emit(f"    mov rax, {node.value}")
