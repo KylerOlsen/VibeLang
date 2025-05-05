@@ -53,44 +53,42 @@ class CodeGenerator:
             self.emit("    call print_int")
 
         elif isinstance(node, BinaryOp):
-            self.generate(node.left)
-            self.emit("    push rax")
             self.generate(node.right)
+            self.emit("    push rax")
+            self.generate(node.left)
             self.emit("    pop rbx")
 
             if node.op == '+':
                 self.emit("    add rax, rbx")
             elif node.op == '-':
-                self.emit("    sub rbx, rax")
-                self.emit("    mov rax, rbx")
+                self.emit("    sub rax, rbx")
             elif node.op == '*':
                 self.emit("    imul rax, rbx")
             elif node.op == '/':
-                self.emit("    xchg rax, rbx")
                 self.emit("    cqo")
                 self.emit("    idiv rbx")
             elif node.op == '==':
-                self.emit("    cmp rbx, rax")
+                self.emit("    cmp rax, rbx")
                 self.emit("    sete al")
                 self.emit("    movzx rax, al")
             elif node.op == '!=':
-                self.emit("    cmp rbx, rax")
+                self.emit("    cmp rax, rbx")
                 self.emit("    setne al")
                 self.emit("    movzx rax, al")
             elif node.op == '<':
-                self.emit("    cmp rbx, rax")
+                self.emit("    cmp rax, rbx")
                 self.emit("    setl al")
                 self.emit("    movzx rax, al")
             elif node.op == '>':
-                self.emit("    cmp rbx, rax")
+                self.emit("    cmp rax, rbx")
                 self.emit("    setg al")
                 self.emit("    movzx rax, al")
             elif node.op == '<=':
-                self.emit("    cmp rbx, rax")
+                self.emit("    cmp rax, rbx")
                 self.emit("    setle al")
                 self.emit("    movzx rax, al")
             elif node.op == '>=':
-                self.emit("    cmp rbx, rax")
+                self.emit("    cmp rax, rbx")
                 self.emit("    setge al")
                 self.emit("    movzx rax, al")
 
